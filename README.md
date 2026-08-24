@@ -260,5 +260,5 @@ The recommendation engine scores and ranks each circular action path using four 
   * Weighted multi-criteria scoring algorithm, circular action generation and impact calculation.
 * [x] **Phase 4: Frontend Development**
   * React + Vite application, Tailwind custom UI, circularity dashboard with Recharts, interactive condition assessment form, and recommendation viewer.
-* [x] **Phase 5: Full-Stack Integration & Polish**
+* [ ] **Phase 5: Full-Stack Integration & Polish**
   * End-to-end API connectivity, robust CORS handling, responsive navigation, authentication guards.
