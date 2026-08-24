@@ -3,60 +3,92 @@
 
 [![SDG 12: Responsible Consumption and Production](https://img.shields.io/badge/SDG-12_Responsible_Consumption-green.svg)](https://sdgs.un.org/goals/goal12)
 [![Backend Framework](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Frontend Framework](https://img.shields.io/badge/Frontend-React_18_+_Vite-61DAFB.svg)](https://vitejs.dev/)
+[![Styling](https://img.shields.io/badge/Styling-Tailwind_CSS-38B2AC.svg)](https://tailwindcss.com/)
 [![Database](https://img.shields.io/badge/Database-SQLite_/_SQLAlchemy-003B57.svg)](https://www.sqlite.org/)
 
 ---
 
-## 📌 Project Identity
-*   **Project Name:** Circular Economy Recommendation Engine
-*   **Team:** INNOVATEX (Avi Mathur, Dev Sharma, Rohit Bhatia)
-*   **Scrum ID:** PRJ26-27/F-07
-*   **Primary SDG:** SDG 12 – Responsible Consumption and Production
-*   **Scope:** An intelligent decision-support system designed to assess products, calculate their condition scores, and recommend optimal circular actions (such as Reuse, Repair, Refurbish, Resell, Recycle, or Recover) to minimize waste and carbon footprint.
+## 📌 Project Overview
+* **Project Name:** Circular Economy Recommendation Engine
+* **Team:** INNOVATEX (Avi Mathur, Dev Sharma, Rohit Bhatia)
+* **Scrum ID:** PRJ26-27/F-07
+* **Primary SDG:** SDG 12 – Responsible Consumption and Production
+* **Scope:** An intelligent full-stack decision-support system designed to assess products, calculate condition scores via structured assessment criteria, and recommend optimal circular economy pathways (Reuse, Repair, Refurbish, Resell, Recycle, Recover, or Dispose) to minimize waste and carbon footprint.
 
 ---
 
 ## 🛠️ Technology Stack
-*   **Backend:** Python 3.13+, FastAPI, Uvicorn
-*   **Database:** SQLite (development database) with SQLAlchemy ORM
-*   **Authentication:** JWT (JSON Web Tokens) with `python-jose` and `passlib[bcrypt]`
-*   **Frontend (Planned):** React.js (Vite), Tailwind CSS, Recharts for data visualization
+
+### Backend
+* **Language & Runtime:** Python 3.10+
+* **Web Framework:** FastAPI & Uvicorn
+* **Database & ORM:** SQLite with SQLAlchemy 2.0
+* **Authentication:** JWT (JSON Web Tokens) with `python-jose` and `passlib[bcrypt]`
+* **Validation & Settings:** Pydantic v2 & `pydantic-settings`
+
+### Frontend
+* **Core:** React 18 with Vite
+* **Routing:** React Router v7
+* **Styling:** Tailwind CSS with custom eco-friendly palette
+* **Charts & Analytics:** Recharts
+* **HTTP Client:** Axios (with request/response auth interceptors)
 
 ---
 
 ## 📁 Directory Structure
+
 ```text
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── auth.py          # JWT & password hashing utilities
-│   ├── config.py        # Pydantic-based settings management
-│   ├── database.py      # SQLAlchemy engine and session setup
-│   ├── main.py          # FastAPI application entrypoint and CORS setup
-│   ├── models.py        # SQLAlchemy database models
-│   ├── schemas.py       # Pydantic schemas for data validation
-│   ├── routers/
+circular-economy/
+├── backend/
+│   ├── app/
 │   │   ├── __init__.py
-│   │   ├── admin.py     # Admin endpoints (category/material creation, user list)
-│   │   ├── auth.py      # Authentication routes (login, register)
-│   │   ├── catalog.py   # Catalog endpoints (category, material listings)
-│   │   └── products.py  # Product CRUD & condition assessment
-│   └── services/
-│       ├── __init__.py
-│       └── condition_assessment.py # Condition assessment scoring logic
-├── .env.example         # Example configuration file
-├── .env                 # Environment variables (local dev)
-├── circular_economy.db  # SQLite database instance (generated)
-├── init_db.py           # Database initializer and seed script
-├── requirements.txt     # Python dependency manifest
-└── README.md            # Project documentation
+│   │   ├── auth.py          # JWT creation, password hashing & auth dependencies
+│   │   ├── config.py        # Centralized settings & environment loader
+│   │   ├── database.py      # SQLAlchemy engine, session & Base model setup
+│   │   ├── main.py          # FastAPI app entrypoint, routers, & CORS config
+│   │   ├── models.py        # Database models (User, Product, Category, Material, etc.)
+│   │   ├── schemas.py       # Pydantic validation schemas
+│   │   ├── routers/
+│   │   │   ├── __init__.py
+│   │   │   ├── admin.py     # Admin management endpoints
+│   │   │   ├── auth.py      # Registration, login & current user endpoints
+│   │   │   ├── catalog.py   # Category & material listings
+│   │   │   ├── products.py  # Product CRUD & condition assessment
+│   │   │   └── recommendations.py # Circular recommendation endpoints
+│   │   └── services/
+│   │       ├── __init__.py
+│   │       ├── condition_assessment.py # Condition questionnaire & scoring engine
+│   │       └── recommendation_engine.py # Weighted multi-criteria circular scorer
+│   ├── init_db.py           # Database initializer & initial seed data script
+│   └── requirements.txt     # Python dependency manifest
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── auth/        # LoginForm, RegisterForm
+│   │   │   ├── common/      # Navbar, LoadingSpinner, ProtectedRoute
+│   │   │   ├── dashboard/   # SummaryCards, ImpactChart
+│   │   │   ├── products/    # ProductList, ProductCard, ProductForm
+│   │   │   └── recommendations/ # RecommendationList, RecommendationCard
+│   │   ├── context/         # AuthContext state management
+│   │   ├── pages/           # Dashboard, Products, ProductDetail, Login, Register
+│   │   ├── services/        # Axios API client & service wrappers
+│   │   ├── App.jsx          # Root router & layout configuration
+│   │   ├── index.css        # Tailwind styles & theme variables
+│   │   └── main.jsx         # React application entrypoint
+│   ├── package.json         # Node.js dependencies & scripts
+│   ├── postcss.config.js
+│   ├── tailwind.config.js   # Custom Tailwind theme tokens
+│   └── vite.config.js       # Vite development configuration
+├── .env.example             # Example environment variables template
+├── .gitignore               # Repository ignore rules
+└── README.md                # Project documentation
 ```
 
 ---
 
 ## 💾 Database Schema
-
-The database is built on SQLite using SQLAlchemy ORM. Below is the relational schema:
 
 ```mermaid
 erDiagram
@@ -128,85 +160,105 @@ erDiagram
 
 ## ⚙️ Recommendation & Scoring Logic
 
-The core recommendation engine relies on a weighted multi-criteria scoring algorithm. The score for each circular action type is determined using four major factors:
+The recommendation engine scores and ranks each circular action path using four weighted factors:
 
-1.  **Condition Score ($30\%$ weight):** Reflects the physical state ($1$–$10$) of the product. High scores favor Reuse/Resell; lower scores suggest Repair/Refurbish or Recycle.
-2.  **Material Properties ($25\%$ weight):** Determined by the material's recyclability and repairability index ($1$–$10$).
-3.  **Age vs. Lifespan ($20\%$ weight):** Evaluates the product's current age against its category's typical lifespan.
-4.  **Environmental Impact ($25\%$ weight):** Factors in the environmental impact index of the constituent materials, scaled by the chosen circular path to minimize CO2 emissions and landfill volume.
+1. **Condition Score (30% weight):** Assesses the physical and functional state (1–10). High scores favor direct **Reuse** or **Resell**; moderate scores suggest **Repair** or **Refurbish**; low scores prioritize **Recycle** or **Recover**.
+2. **Material Properties (25% weight):** Evaluates constituent material recyclability and repairability scores (1–10).
+3. **Age vs. Lifespan (20% weight):** Compares the product's current age against the category baseline lifespan.
+4. **Environmental Impact (25% weight):** Computes estimated $CO_2$ emissions avoided (kg) and landfill diversion (kg) based on material impact factors and action type.
 
 ---
 
-## 🚀 Setup & Execution Instructions
+## 🚀 Setup & Execution Guide
 
-Follow these steps to run the backend locally:
+### Prerequisites
+* **Python 3.10+** and `pip`
+* **Node.js 18+** and `npm`
 
-### 1. Prerequisite Checks
-Ensure Python 3.10+ and `pip` are installed on your system.
+---
 
-### 2. Set Up a Virtual Environment
-Create and activate a virtual environment to manage dependencies:
-```bash
-# Create a virtual environment
-python3 -m venv venv
+### 1. Backend Setup
 
-# Activate on macOS/Linux:
-source venv/bin/activate
+1. **Navigate to the backend directory**:
+   ```bash
+   cd backend
+   ```
 
-# Activate on Windows (cmd):
-venv\Scripts\activate.bat
-```
+2. **Create and activate a virtual environment**:
+   ```bash
+   python3 -m venv venv
 
-### 3. Install Dependencies
-Install all required packages:
-```bash
-pip install -r requirements.txt
-```
+   # macOS / Linux
+   source venv/bin/activate
 
-### 4. Configure Environment Variables
-Copy the template configuration file:
-```bash
-cp .env.example .env
-```
-Open `.env` and configure your settings:
-*   `DATABASE_URL`: SQLite database file path.
-*   `JWT_SECRET_KEY`: A secure random secret key.
-*   `JWT_ALGORITHM`: Cryptographic algorithm (default: `HS256`).
+   # Windows (cmd)
+   venv\Scripts\activate.bat
+   ```
 
-### 5. Initialize & Seed Database
-Set up the tables and populate seed data (default categories, materials, and a default admin user):
-```bash
-python init_db.py
-```
-*Note: This creates a default admin account with username `admin` and password `admin123`.*
+3. **Install Python dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 6. Run the FastAPI Development Server
-Start the Uvicorn server:
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-The interactive API documentation will be available at:
-*   **Swagger UI:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-*   **ReDoc:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+4. **Configure environment variables**:
+   ```bash
+   cp ../.env.example .env
+   ```
+
+5. **Initialize and seed the database**:
+   ```bash
+   python init_db.py
+   ```
+   *Creates standard categories, materials, and a default admin user.*
+
+6. **Start the FastAPI backend server**:
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
+   * Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+   * Alternative ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+---
+
+### 2. Frontend Setup
+
+1. **Navigate to the frontend directory**:
+   ```bash
+   cd frontend
+   ```
+
+2. **Install Node dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Start the Vite development server**:
+   ```bash
+   npm run dev
+   ```
+   * The web application will be accessible at: [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🔑 Default Credentials
+
+| Role | Username | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin` | `admin123` |
+
+*(You can also register new regular user accounts via the frontend registration page at `/register`)*
 
 ---
 
 ## 🗓️ Development Roadmap
 
-*   **Phase 1: Project Setup & Backend Foundation** (Status: **Completed**)
-    *   FastAPI application structure initialized.
-    *   SQLite database with SQLAlchemy schemas designed and operational.
-    *   User authentication endpoints (register, login, JWT issuance) implemented.
-*   **Phase 2: Product & Material Management** (Status: **Completed**)
-    *   Create endpoints for Category and Material management.
-    *   Create CRUD endpoints for user Products.
-    *   Implement Assessment questionnaire schemas and condition assessment service.
-*   **Phase 3: Recommendation Engine Implementation** (Status: **Next**)
-    *   Code the weighted multi-criteria scoring algorithm.
-    *   Create `/recommendations/generate` endpoints.
-*   **Phase 4: Frontend Development**
-    *   React setup using Vite + Tailwind CSS.
-    *   Develop dashboard, entry forms, and impact visualizations using Recharts.
-*   **Phase 5: Integration, Polish & Deploy**
-    *   End-to-end API integration and validation.
-    *   Performance optimizations and UI styling polish.
+* [x] **Phase 1: Project Setup & Backend Foundation**
+  * FastAPI architecture, SQLite & SQLAlchemy models, JWT auth flow.
+* [x] **Phase 2: Product & Material Management**
+  * Category and material catalog, product CRUD endpoints, condition assessment service.
+* [x] **Phase 3: Recommendation Engine Implementation**
+  * Weighted multi-criteria scoring algorithm, circular action generation and impact calculation.
+* [x] **Phase 4: Frontend Development**
+  * React + Vite application, Tailwind custom UI, circularity dashboard with Recharts, interactive condition assessment form, and recommendation viewer.
+* [x] **Phase 5: Full-Stack Integration & Polish**
+  * End-to-end API connectivity, robust CORS handling, responsive navigation, authentication guards.
