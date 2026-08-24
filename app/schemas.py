@@ -134,4 +134,25 @@ class ConditionAssessmentOutput(BaseModel):
     condition_score: int
     breakdown: dict
     summary: str
+# ---------------------------------------------------------------------------
+# Recommendations
+# ---------------------------------------------------------------------------
 
+class CircularActionOut(BaseModel):
+    id: int
+    product_id: int
+    action_type: str
+    recommendation_score: float
+    is_recommended: bool
+    environmental_impact: dict
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class RecommendationResponse(BaseModel):
+    product_id: int
+    product_name: str
+    top_recommendation: str
+    actions: list[CircularActionOut]
