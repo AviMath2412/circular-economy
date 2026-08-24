@@ -35,9 +35,15 @@ backend/
 │   ├── main.py          # FastAPI application entrypoint and CORS setup
 │   ├── models.py        # SQLAlchemy database models
 │   ├── schemas.py       # Pydantic schemas for data validation
-│   └── routers/
+│   ├── routers/
+│   │   ├── __init__.py
+│   │   ├── admin.py     # Admin endpoints (category/material creation, user list)
+│   │   ├── auth.py      # Authentication routes (login, register)
+│   │   ├── catalog.py   # Catalog endpoints (category, material listings)
+│   │   └── products.py  # Product CRUD & condition assessment
+│   └── services/
 │       ├── __init__.py
-│       └── auth.py      # Authentication routes (login, register)
+│       └── condition_assessment.py # Condition assessment scoring logic
 ├── .env.example         # Example configuration file
 ├── .env                 # Environment variables (local dev)
 ├── circular_economy.db  # SQLite database instance (generated)
@@ -191,11 +197,11 @@ The interactive API documentation will be available at:
     *   FastAPI application structure initialized.
     *   SQLite database with SQLAlchemy schemas designed and operational.
     *   User authentication endpoints (register, login, JWT issuance) implemented.
-*   **Phase 2: Product & Material Management** (Status: **Next**)
+*   **Phase 2: Product & Material Management** (Status: **Completed**)
     *   Create endpoints for Category and Material management.
     *   Create CRUD endpoints for user Products.
-    *   Implement Assessment questionnaire schemas.
-*   **Phase 3: Recommendation Engine Implementation**
+    *   Implement Assessment questionnaire schemas and condition assessment service.
+*   **Phase 3: Recommendation Engine Implementation** (Status: **Next**)
     *   Code the weighted multi-criteria scoring algorithm.
     *   Create `/recommendations/generate` endpoints.
 *   **Phase 4: Frontend Development**

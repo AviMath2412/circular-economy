@@ -6,6 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app.routers import auth as auth_router
+from app.routers import catalog as catalog_router
+from app.routers import admin as admin_router
+from app.routers import products as products_router
 
 # Creates tables if they don't exist yet. For Phase 1 this is enough;
 # init_db.py (below) is used separately to also load seed data.
@@ -26,6 +29,9 @@ app.add_middleware(
 )
 
 app.include_router(auth_router.router)
+app.include_router(catalog_router.router)
+app.include_router(admin_router.router)
+app.include_router(products_router.router)
 
 
 @app.get("/")
