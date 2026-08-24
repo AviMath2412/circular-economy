@@ -1,0 +1,533 @@
+Codebase Analysis for: /Users/apple/Developer/backend
+
+Directory Structure:
+└── backend
+    ├── app
+    │   ├── routers
+    │   │   ├── auth.py
+    │   │   └── __init__.py
+    │   ├── auth.py
+    │   ├── config.py
+    │   ├── models.py
+    │   ├── database.py
+    │   ├── __init__.py
+    │   ├── schemas.py
+    │   └── main.py
+    ├── circular_economy.db
+    ├── requirements.txt
+    ├── .env
+    ├── .env.example
+    └── init_db.py
+
+Summary:
+Total files analyzed: 14
+Total directories analyzed: 2
+Estimated output size: 15.93 KB
+Actual analyzed size: 81.68 KB
+Total tokens: 3260
+Actual text content size: 13.68 KB
+
+File Contents:
+
+==================================================
+File: backend/app/routers/auth.py
+==================================================
+"""
+Authentication endpoints.
+
+Note on /logout: JWTs are stateless, so "logout" here is a client-side
+action (delete the stored token). The endpoint exists for API symmetry
+and as a place to add token-blacklisting later if needed.
+"""
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models import User
+from app.schemas import UserRegister, UserLogin, UserOut, TokenResponse
+from app.auth import hash_password, verify_password, create_access_token, get_current_user
+
+router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+def register(payload: UserRegister, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == payload.username).first():
+        raise HTTPException(status_code=400, detail="Username already taken")
+    if db.query(User).filter(User.email == payload.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user = User(
+        username=payload.username,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        role="user",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {"success": True, "message": "User registered successfully", "user_id": user.id}
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(payload: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == payload.username).first()
+    if not user or not verify_password(payload.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    token = create_access_token(user_id=user.id, role=user.role)
+    return TokenResponse(token=token, user=UserOut.model_validate(user))
+
+
+@router.post("/logout")
+def logout():
+    return {"success": True, "message": "Logged out successfully"}
+
+
+@router.get("/me", response_model=UserOut)
+def me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+==================================================
+File: backend/app/routers/__init__.py
+==================================================
+
+
+==================================================
+File: backend/app/auth.py
+==================================================
+"""
+Auth utilities:
+- password hashing/verification (bcrypt via passlib)
+- JWT creation/decoding (python-jose)
+- FastAPI dependencies to get the current user, and to require admin role
+"""
+from datetime import datetime, timedelta
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.database import get_db
+from app.models import User
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# tokenUrl just documents where a token *could* be obtained (for Swagger UI);
+# our actual login route is /api/auth/login
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, password_hash: str) -> bool:
+    return pwd_context.verify(plain_password, password_hash)
+
+
+def create_access_token(user_id: int, role: str) -> str:
+    expire = datetime.utcnow() + timedelta(hours=settings.jwt_expiration_hours)
+    payload = {"sub": str(user_id), "role": role, "exp": expire}
+    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+
+
+def decode_access_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    payload = decode_access_token(token)
+    user_id = payload.get("sub")
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user
+
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
+
+
+==================================================
+File: backend/app/config.py
+==================================================
+"""
+Centralized configuration for the app.
+Reads from a .env file (copy .env.example -> .env and edit values).
+"""
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    database_url: str = "sqlite:///./circular_economy.db"
+    jwt_secret_key: str = "dev-secret-change-me"
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_hours: int = 24
+    app_env: str = "development"
+
+    class Config:
+        env_file = ".env"
+
+
+settings = Settings()
+
+
+==================================================
+File: backend/app/models.py
+==================================================
+"""
+SQLAlchemy ORM models.
+
+These map 1:1 onto the schema in the project spec (users, categories,
+materials, products, circular_actions, action_logs).
+"""
+from datetime import datetime
+
+from sqlalchemy import (
+    Column, Integer, String, Float, Boolean, Text, ForeignKey, DateTime
+)
+from sqlalchemy.orm import relationship
+
+from app.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    email = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), default="user")  # "user" or "admin"
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+
+    products = relationship("Product", back_populates="owner")
+    action_logs = relationship("ActionLog", back_populates="user")
+
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+    typical_lifespan_years = Column(Integer, nullable=True)
+
+    products = relationship("Product", back_populates="category")
+
+
+class Material(Base):
+    __tablename__ = "materials"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True, nullable=False)
+    recyclability_score = Column(Integer, nullable=False)     # 1-10
+    repairability_score = Column(Integer, nullable=False)     # 1-10
+    environmental_impact_factor = Column(Float, nullable=False)  # 0-1
+
+    products = relationship("Product", back_populates="material")
+
+
+class Product(Base):
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    material_id = Column(Integer, ForeignKey("materials.id"), nullable=True)
+    age_years = Column(Integer, nullable=False, default=0)
+    condition_score = Column(Integer, nullable=False)  # 1-10
+    condition_description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    owner = relationship("User", back_populates="products")
+    category = relationship("Category", back_populates="products")
+    material = relationship("Material", back_populates="products")
+    circular_actions = relationship("CircularAction", back_populates="product")
+
+
+class CircularAction(Base):
+    __tablename__ = "circular_actions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    action_type = Column(String(20), nullable=False)  # reuse/repair/refurbish/...
+    recommendation_score = Column(Float, nullable=False)
+    is_recommended = Column(Boolean, default=False)
+    environmental_impact = Column(Text, nullable=True)  # JSON-encoded string
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    product = relationship("Product", back_populates="circular_actions")
+
+
+class ActionLog(Base):
+    __tablename__ = "action_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    action_type = Column(String(20), nullable=False)
+    completed_at = Column(DateTime, default=datetime.utcnow)
+    notes = Column(Text, nullable=True)
+
+    user = relationship("User", back_populates="action_logs")
+
+
+==================================================
+File: backend/app/database.py
+==================================================
+"""
+Database engine and session management.
+
+SQLite needs check_same_thread=False because FastAPI can use the
+connection from different threads within one request lifecycle.
+"""
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+from app.config import settings
+
+connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
+
+engine = create_engine(settings.database_url, connect_args=connect_args)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
+
+
+def get_db():
+    """
+    FastAPI dependency that yields a DB session and guarantees it closes,
+    even if the request raises an exception.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+==================================================
+File: backend/app/__init__.py
+==================================================
+
+
+==================================================
+File: backend/app/schemas.py
+==================================================
+"""
+Pydantic schemas define the shape of request/response JSON.
+Keeping these separate from the SQLAlchemy models (app/models.py) is
+deliberate: the DB model can have fields (like password_hash) that
+should never be returned to a client.
+"""
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field
+
+
+class UserRegister(BaseModel):
+    username: str = Field(min_length=3, max_length=50)
+    email: EmailStr
+    password: str = Field(min_length=6)
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True  # lets this read straight from an ORM object
+
+
+class TokenResponse(BaseModel):
+    success: bool = True
+    token: str
+    user: UserOut
+
+
+==================================================
+File: backend/app/main.py
+==================================================
+"""
+App entrypoint. Run with:  uvicorn app.main:app --reload --port 8000
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.database import Base, engine
+from app.routers import auth as auth_router
+
+# Creates tables if they don't exist yet. For Phase 1 this is enough;
+# init_db.py (below) is used separately to also load seed data.
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI(
+    title="Circular Economy Recommendation Engine API",
+    version="1.0.0",
+)
+
+# Allow the Vite dev server (default port 5173) to call this API.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router.router)
+
+
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "circular-economy-recommendation-engine"}
+
+
+==================================================
+File: backend/requirements.txt
+==================================================
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlalchemy==2.0.35
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.9
+pydantic==2.9.2
+email-validator==2.2.0
+pydantic-settings==2.5.2
+python-dotenv==1.0.1
+
+
+==================================================
+File: backend/.env
+==================================================
+# Database
+DATABASE_URL=sqlite:///./circular_economy.db
+
+# JWT
+JWT_SECRET_KEY=change-this-to-a-long-random-string-in-production
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# App
+APP_ENV=development
+
+
+==================================================
+File: backend/.env.example
+==================================================
+# Database
+DATABASE_URL=sqlite:///./circular_economy.db
+
+# JWT
+JWT_SECRET_KEY=change-this-to-a-long-random-string-in-production
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# App
+APP_ENV=development
+
+
+==================================================
+File: backend/init_db.py
+==================================================
+"""
+Run once to set up the database with tables + seed data:
+
+    python init_db.py
+
+Safe to re-run: it checks for existing rows before inserting.
+"""
+from app.database import Base, engine, SessionLocal
+from app.models import Category, Material, User
+from app.auth import hash_password
+
+CATEGORIES = [
+    ("Electronics", "Electronic devices and gadgets", 5),
+    ("Furniture", "Home and office furniture", 15),
+    ("Clothing", "Apparel and textiles", 3),
+    ("Appliances", "Home and kitchen appliances", 10),
+    ("Books", "Books and publications", 20),
+    ("Toys", "Toys and games", 5),
+    ("Sports Equipment", "Sports and fitness gear", 7),
+    ("Tools", "Hand tools and power tools", 12),
+]
+
+MATERIALS = [
+    # name, recyclability_score, repairability_score, environmental_impact_factor
+    ("Plastic", 7, 3, 0.8),
+    ("Metal", 9, 6, 0.6),
+    ("Wood", 5, 8, 0.3),
+    ("Glass", 8, 2, 0.5),
+    ("Fabric", 6, 7, 0.4),
+    ("Paper", 8, 1, 0.2),
+    ("Rubber", 4, 2, 0.7),
+    ("Composite", 3, 4, 0.9),
+]
+
+
+def run():
+    print("Creating tables...")
+    Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        if db.query(Category).count() == 0:
+            print("Seeding categories...")
+            for name, desc, lifespan in CATEGORIES:
+                db.add(Category(name=name, description=desc, typical_lifespan_years=lifespan))
+
+        if db.query(Material).count() == 0:
+            print("Seeding materials...")
+            for name, recy, repa, impact in MATERIALS:
+                db.add(Material(
+                    name=name,
+                    recyclability_score=recy,
+                    repairability_score=repa,
+                    environmental_impact_factor=impact,
+                ))
+
+        if db.query(User).filter(User.username == "admin").first() is None:
+            print("Creating admin user (username: admin, password: admin123)...")
+            db.add(User(
+                username="admin",
+                email="admin@innovatex.com",
+                password_hash=hash_password("admin123"),  # CHANGE before any real deployment
+                role="admin",
+            ))
+
+        db.commit()
+        print("Done.")
+    finally:
+        db.close()
+
+
+if __name__ == "__main__":
+    run()
+
