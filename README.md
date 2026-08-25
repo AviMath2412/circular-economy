@@ -377,4 +377,3 @@ erDiagram
   * React + Vite application, Tailwind custom UI, circularity dashboard with Recharts, interactive condition assessment form, and recommendation viewer.
 * [x] **Phase 5: Image-Based Condition Auto-Detection (OpenCV)**
   * Drag-and-drop image upload (`react-dropzone`), OpenCV heuristic analysis (blur variance, brightness/contrast, edge density for surface wear), user slider fine-tuning, and image display on cards and detail views.
-
