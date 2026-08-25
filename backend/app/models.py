@@ -5,15 +5,11 @@ These map 1:1 onto the schema in the project spec (users, categories,
 materials, products, circular_actions, action_logs).
 """
 from datetime import datetime
-
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, Text, ForeignKey, DateTime
 )
 from sqlalchemy.orm import relationship
-
 from app.database import Base
-
-
 class User(Base):
     __tablename__ = "users"
 
@@ -25,8 +21,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
 
-    products = relationship("Product", back_populates="owner")
-    action_logs = relationship("ActionLog", back_populates="user")
+    products = relationship("Product", back_populates="owner", cascade="all, delete-orphan")
+    action_logs = relationship("ActionLog", back_populates="user", cascade="all, delete-orphan")
 
 
 class Category(Base):
@@ -63,12 +59,14 @@ class Product(Base):
     age_years = Column(Integer, nullable=False, default=0)
     condition_score = Column(Integer, nullable=False)  # 1-10
     condition_description = Column(Text, nullable=True)
+    image_path = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("User", back_populates="products")
     category = relationship("Category", back_populates="products")
     material = relationship("Material", back_populates="products")
-    circular_actions = relationship("CircularAction", back_populates="product")
+    circular_actions = relationship("CircularAction", back_populates="product", cascade="all, delete-orphan")
+    action_logs = relationship("ActionLog", back_populates="product", cascade="all, delete-orphan")
 
 
 class CircularAction(Base):
@@ -96,3 +94,4 @@ class ActionLog(Base):
     notes = Column(Text, nullable=True)
 
     user = relationship("User", back_populates="action_logs")
+    product = relationship("Product", back_populates="action_logs")

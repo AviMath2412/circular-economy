@@ -1,8 +1,10 @@
 """
 App entrypoint. Run with:  uvicorn app.main:app --reload --port 8000
 """
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app.routers import auth as auth_router
@@ -15,10 +17,17 @@ from app.routers import recommendations as recommendations_router
 # init_db.py (below) is used separately to also load seed data.
 Base.metadata.create_all(bind=engine)
 
+# Ensure uploads directory exists
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "products")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 app = FastAPI(
     title="Circular Economy Recommendation Engine API",
     version="1.0.0",
 )
+
+# Mount static uploads
+app.mount("/uploads", StaticFiles(directory=os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")), name="uploads")
 
 # Allow Vite dev server and local clients
 app.add_middleware(

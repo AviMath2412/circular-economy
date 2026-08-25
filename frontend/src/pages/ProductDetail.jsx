@@ -53,32 +53,47 @@ export default function ProductDetail() {
       </Link>
 
       <div className="bg-white border border-forest/15 rounded-2xl p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-forest-dark">{product.name}</h1>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-forest/10 text-forest border border-forest/20">
-                Condition: {product.condition_score}/10
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink/65 mt-2">
-              <span>Category: <strong>{product.category_name}</strong></span>
-              <span>•</span>
-              <span>Material: <strong>{product.material_name || 'Mixed/Unknown'}</strong></span>
-              <span>•</span>
-              <span>Age: <strong>{product.age_years} {product.age_years === 1 ? 'yr' : 'yrs'}</strong></span>
-            </div>
-            {product.condition_description && (
-              <p className="text-xs bg-sage/50 border border-forest/10 rounded-lg p-3 text-ink/75 mt-3">
-                <span className="font-semibold text-forest-dark">Notes: </span>
-                {product.condition_description}
-              </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-5 flex-1">
+            {product.image_path && (
+              <div className="w-full sm:w-36 h-36 rounded-xl overflow-hidden bg-ink/5 border border-forest/20 shrink-0">
+                <img
+                  src={
+                    product.image_path.startsWith('http')
+                      ? product.image_path
+                      : `http://localhost:8000${product.image_path}`
+                  }
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             )}
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-forest-dark">{product.name}</h1>
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-forest/10 text-forest border border-forest/20">
+                  Condition: {product.condition_score}/10
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink/65 mt-2">
+                <span>Category: <strong>{product.category_name}</strong></span>
+                <span>•</span>
+                <span>Material: <strong>{product.material_name || 'Mixed/Unknown'}</strong></span>
+                <span>•</span>
+                <span>Age: <strong>{product.age_years} {product.age_years === 1 ? 'yr' : 'yrs'}</strong></span>
+              </div>
+              {product.condition_description && (
+                <p className="text-xs bg-sage/50 border border-forest/10 rounded-lg p-3 text-ink/75 mt-3">
+                  <span className="font-semibold text-forest-dark">Notes: </span>
+                  {product.condition_description}
+                </p>
+              )}
+            </div>
           </div>
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50 cursor-pointer"
+            className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50 cursor-pointer shrink-0"
           >
             {deleting ? 'Deleting…' : 'Delete Product'}
           </button>

@@ -1,9 +1,6 @@
-"""
-Product management: CRUD, scoped so a user only ever sees/edits their
-own products (admins can still access anything via /api/admin routes
-later if needed — kept out of scope for Phase 2 to match the spec).
-"""
-from fastapi import APIRouter, Depends, HTTPException
+import os
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
@@ -11,11 +8,16 @@ from app.models import Product, Category, Material, User
 from app.schemas import (
     ProductCreate, ProductUpdate, ProductOut,
     ConditionAssessmentInput, ConditionAssessmentOutput,
+    ImageAnalysisOutput,
 )
 from app.auth import get_current_user
 from app.services.condition_assessment import assess_condition
+from app.services.image_analysis import analyze_image_condition
 
 router = APIRouter(prefix="/api/products", tags=["products"])
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads", "products")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
 def _to_product_out(product: Product) -> ProductOut:
@@ -29,6 +31,7 @@ def _to_product_out(product: Product) -> ProductOut:
         age_years=product.age_years,
         condition_score=product.condition_score,
         condition_description=product.condition_description,
+        image_path=product.image_path,
         created_at=product.created_at,
     )
 
@@ -45,6 +48,38 @@ def _get_owned_product(product_id: int, db: Session, current_user: User) -> Prod
     if product.user_id != current_user.id and current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to access this product")
     return product
+
+
+@router.post("/analyze-image", response_model=ImageAnalysisOutput)
+async def analyze_image_endpoint(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Accepts an uploaded image, saves it, runs OpenCV-based condition heuristics,
+    and returns estimated condition score and confidence notes.
+    """
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Empty image file provided")
+
+    # Generate unique filename to prevent collisions
+    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
+    unique_filename = f"{uuid.uuid4().hex[:12]}{ext}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    analysis = analyze_image_condition(contents)
+    web_image_path = f"/uploads/products/{unique_filename}"
+
+    return ImageAnalysisOutput(
+        estimated_score=analysis["estimated_score"],
+        confidence_notes=analysis["confidence_notes"],
+        breakdown=analysis["breakdown"],
+        image_path=web_image_path,
+    )
 
 
 @router.post("/assess-condition", response_model=ConditionAssessmentOutput)

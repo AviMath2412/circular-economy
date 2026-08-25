@@ -85,6 +85,7 @@ class ProductCreate(BaseModel):
     age_years: int = Field(ge=0)
     condition_score: int = Field(ge=1, le=10)
     condition_description: str | None = None
+    image_path: str | None = None
 
 
 class ProductUpdate(BaseModel):
@@ -97,6 +98,7 @@ class ProductUpdate(BaseModel):
     age_years: int | None = Field(default=None, ge=0)
     condition_score: int | None = Field(default=None, ge=1, le=10)
     condition_description: str | None = None
+    image_path: str | None = None
 
 
 class ProductOut(BaseModel):
@@ -109,6 +111,7 @@ class ProductOut(BaseModel):
     age_years: int
     condition_score: int
     condition_description: str | None = None
+    image_path: str | None = None
     created_at: datetime
 
     class Config:
@@ -116,8 +119,15 @@ class ProductOut(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Condition Assessment
+# Image Analysis & Condition Assessment
 # ---------------------------------------------------------------------------
+
+class ImageAnalysisOutput(BaseModel):
+    estimated_score: int
+    confidence_notes: str
+    breakdown: dict
+    image_path: str | None = None
+
 
 class ConditionAssessmentInput(BaseModel):
     """

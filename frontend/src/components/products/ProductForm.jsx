@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as productService from '../../services/productService'
+import ImageUpload from './ImageUpload'
 
 const emptyAssessment = {
   functionality_score: 7,
@@ -21,6 +22,7 @@ export default function ProductForm({ onSuccess }) {
     age_years: 0,
     condition_score: 7,
     condition_description: '',
+    image_path: '',
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -30,6 +32,31 @@ export default function ProductForm({ onSuccess }) {
     productService.getCategories().then(setCategories).catch(console.error)
     productService.getMaterials().then(setMaterials).catch(console.error)
   }, [])
+
+  const handleImageAnalysisComplete = (analysis) => {
+    if (!analysis) {
+      setForm((f) => ({ ...f, image_path: '' }))
+      return
+    }
+
+    const score = analysis.estimated_score
+    setForm((f) => ({
+      ...f,
+      condition_score: score,
+      image_path: analysis.image_path || f.image_path,
+      condition_description: f.condition_description
+        ? f.condition_description
+        : `Auto-assessed via image: ${analysis.confidence_notes}`,
+    }))
+
+    // Update questionnaire sliders to match detected score
+    setAssessment({
+      functionality_score: Math.min(10, Math.max(1, score)),
+      physical_damage_score: Math.min(10, Math.max(1, score)),
+      cosmetic_score: Math.min(10, Math.max(1, score)),
+      has_original_parts: score >= 6,
+    })
+  }
 
   const runAssessment = async () => {
     try {
@@ -53,6 +80,7 @@ export default function ProductForm({ onSuccess }) {
         age_years: Number(form.age_years),
         condition_score: Number(form.condition_score),
         condition_description: form.condition_description || null,
+        image_path: form.image_path || null,
       }
       const res = await productService.createProduct(payload)
       if (onSuccess) {
@@ -91,6 +119,12 @@ export default function ProductForm({ onSuccess }) {
 
   return (
     <div className="space-y-6">
+      {/* Product Photo Upload & Condition Auto-Detection */}
+      <ImageUpload
+        onAnalysisComplete={handleImageAnalysisComplete}
+        initialScore={form.condition_score}
+      />
+
       {/* Assessment Section */}
       <section className="bg-white border border-forest/15 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
