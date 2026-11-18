@@ -48,7 +48,7 @@ def create_material(
 
 @router.get("/users")
 def list_users(db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    users = db.query(User).all()
+    users = db.query(User).order_by(User.id).all()
     return {
         "users": [
             {
@@ -61,3 +61,50 @@ def list_users(db: Session = Depends(get_db), admin: User = Depends(require_admi
             for u in users
         ]
     }
+
+
+@router.put("/users/{user_id}/role")
+def update_user_role(
+    user_id: int,
+    role: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    if role not in ["user", "admin"]:
+        raise HTTPException(status_code=400, detail="Role must be 'user' or 'admin'")
+
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    target_user.role = role
+    db.commit()
+    return {"success": True, "message": f"User role updated to {role}", "user_id": user_id, "role": role}
+
+
+@router.delete("/categories/{category_id}")
+def delete_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    cat = db.query(Category).filter(Category.id == category_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    db.delete(cat)
+    db.commit()
+    return {"success": True, "message": "Category deleted"}
+
+
+@router.delete("/materials/{material_id}")
+def delete_material(
+    material_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+):
+    mat = db.query(Material).filter(Material.id == material_id).first()
+    if not mat:
+        raise HTTPException(status_code=404, detail="Material not found")
+    db.delete(mat)
+    db.commit()
+    return {"success": True, "message": "Material deleted"}

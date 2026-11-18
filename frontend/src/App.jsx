@@ -6,6 +6,9 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
 import ProductDetail from './pages/ProductDetail'
+import Alternatives from './pages/Alternatives'
+import Reports from './pages/Reports'
+import Admin from './pages/Admin'
 import { useAuth } from './context/AuthContext'
 
 function Layout({ children }) {
@@ -56,6 +59,36 @@ export default function App() {
           <ProtectedRoute>
             <Layout>
               <ProductDetail />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/alternatives"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Alternatives />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Reports />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Admin />
             </Layout>
           </ProtectedRoute>
         }

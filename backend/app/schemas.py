@@ -19,6 +19,15 @@ class UserLogin(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6)
+
+
 class UserOut(BaseModel):
     id: int
     username: str
@@ -187,3 +196,42 @@ class RecommendationResponse(BaseModel):
     product_name: str
     top_recommendation: str
     actions: list[CircularActionOut]
+
+
+# ---------------------------------------------------------------------------
+# Sustainable Alternatives (US14)
+# ---------------------------------------------------------------------------
+
+class SustainableAlternativeOut(BaseModel):
+    id: int
+    category_id: int
+    category_name: str | None = None
+    name: str
+    brand: str | None = None
+    description: str
+    circular_feature: str
+    co2_reduction_pct: int
+    lifespan_multiplier: float
+    price_tier: str
+    resource_url: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------------------------------------------------------------------
+# Notifications (US17)
+# ---------------------------------------------------------------------------
+
+class NotificationOut(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    message: str
+    notification_type: str
+    is_read: bool
+    link: str | None = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

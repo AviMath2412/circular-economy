@@ -58,13 +58,22 @@ export default function Dashboard() {
             Real-time analytics and carbon avoidance across your tracked assets
           </p>
         </div>
-        <Link
-          to="/products"
-          className="bg-forest text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-forest-dark transition shadow-sm flex items-center gap-2"
-        >
-          <span>📦</span>
-          <span>Manage Products</span>
-        </Link>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Link
+            to="/reports"
+            className="border border-forest/20 text-forest bg-sage/40 hover:bg-sage/70 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>📊</span>
+            <span>Reports</span>
+          </Link>
+          <Link
+            to="/products"
+            className="bg-forest text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold hover:bg-forest-dark transition shadow-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>➕</span>
+            <span>Register Asset</span>
+          </Link>
+        </div>
       </div>
 
       {/* KPI Cards */}

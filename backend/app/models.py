@@ -95,3 +95,36 @@ class ActionLog(Base):
 
     user = relationship("User", back_populates="action_logs")
     product = relationship("Product", back_populates="action_logs")
+
+
+class SustainableAlternative(Base):
+    __tablename__ = "sustainable_alternatives"
+
+    id = Column(Integer, primary_key=True, index=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    name = Column(String(120), nullable=False)
+    brand = Column(String(80), nullable=True)
+    description = Column(Text, nullable=False)
+    circular_feature = Column(String(120), nullable=False)
+    co2_reduction_pct = Column(Integer, default=50)
+    lifespan_multiplier = Column(Float, default=1.5)
+    price_tier = Column(String(20), default="Moderate")  # Budget, Moderate, Premium
+    resource_url = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    category = relationship("Category")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(120), nullable=False)
+    message = Column(Text, nullable=False)
+    notification_type = Column(String(30), default="recommendation")  # recommendation, reminder, impact_milestone
+    is_read = Column(Boolean, default=False)
+    link = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

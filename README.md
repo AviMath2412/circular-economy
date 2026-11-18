@@ -30,9 +30,9 @@ The **Circular Economy Recommendation Engine** provides an end-to-end, intellige
 ## 🏗️ System Architecture & Data Flow
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Client["Frontend Client (React 18 + Vite + Tailwind CSS)"]
-        UI[User Interface & Dashboard]
+        UI["User Interface & Dashboard"]
         Dropzone["Image Upload & Dropzone (react-dropzone)"]
         Form["Product & Condition Form (Sliders / Override)"]
         Charts["Circularity Analytics (Recharts)"]
@@ -48,23 +48,16 @@ graph TD
     end
 
     subgraph CoreLogics["Core Logic & Processing Services"]
-        CVService["Image Analysis Service (OpenCV Heuristics)
-        - Laplacian Sharpness Filter
-        - Canny Edge Density (Wear/Scratch)
-        - Brightness & Contrast Detection"]
+        CVService["Image Analysis Service (OpenCV Heuristics)<br/>• Laplacian Sharpness Filter<br/>• Canny Edge Density Filter<br/>• Brightness & Contrast Detection"]
         
-        CAService["Condition Assessment Service
-        - Functionality, Physical, Cosmetic Weights
-        - Missing Parts Penalty"]
+        CAService["Condition Assessment Service<br/>• Functionality, Physical, Cosmetic Weights<br/>• Missing Parts Penalty"]
         
-        RecEngine["Recommendation Engine
-        - Multi-Criteria Scoring (30% Condition, 25% Material, 20% Lifespan, 25% Impact)
-        - Environmental Impact Formula (CO2 & Landfill kg)"]
+        RecEngine["Recommendation Engine<br/>• Multi-Criteria Scoring (30% Condition, 25% Material, 20% Lifespan, 25% Impact)<br/>• Real-World CO2 & Landfill Avoidance Metrics"]
     end
 
     subgraph Storage["Persistence Layer"]
-        DB[(SQLite Database via SQLAlchemy ORM)]
-        Disk[Local Filesystem /uploads/products/]
+        DB[("SQLite Database via SQLAlchemy ORM")]
+        Disk["Local Filesystem /uploads/products/"]
     end
 
     %% Interactions
@@ -90,20 +83,17 @@ graph TD
 
 ```mermaid
 flowchart TD
-    Start([Product Input]) --> InputType{Input Mode}
+    Start(["Product Input"]) --> InputType{"Input Mode"}
 
     %% Image Pipeline
-    InputType -->|Upload Product Photo| CV[OpenCV Vision Pipeline]
-    CV --> Step1["1. Laplacian Variance (Var > 50 -> Sharp; Var < 50 -> Blurry)"]
-    Step1 --> Step2["2. Brightness & Contrast (Mean & Std Dev Analysis)"]
-    Step2 --> Step3["3. Canny Edge Density (Detect Surface Scratches / Fracture Texture)"]
-    Step3 --> HeuristicScore["Heuristic Condition Score (1–10) + Explainable Notes"]
+    InputType -->|Upload Product Photo| CV["OpenCV Vision Pipeline"]
+    CV --> Step1["1. Laplacian Variance<br/>• Var > 50: Sharp<br/>• Var < 50: Blurry"]
+    Step1 --> Step2["2. Brightness & Contrast<br/>• Mean & Std Dev Analysis"]
+    Step2 --> Step3["3. Canny Edge Density<br/>• Surface Scratches & Fracture Texture"]
+    Step3 --> HeuristicScore["Heuristic Condition Score (1–10) + Notes"]
     
     %% Manual / Questionnaire Pipeline
-    InputType -->|Questionnaire| Q["Condition Questionnaire:
-    - Functionality (50%)
-    - Physical Damage (30%)
-    - Cosmetic Appearance (20%)"]
+    InputType -->|Questionnaire| Q["Condition Questionnaire<br/>• Functionality (50%)<br/>• Physical Damage (30%)<br/>• Cosmetic Appearance (20%)"]
     Q --> QScore["Weighted Questionnaire Score (1–10)"]
 
     HeuristicScore --> UserOverride["User Review & Slider Fine-Tuning"]
@@ -113,28 +103,19 @@ flowchart TD
     UserOverride --> Engine["Recommendation Engine Algorithm"]
     
     subgraph ScoringMatrix["Multi-Criteria Scoring Formula"]
-        Engine --> Weight1["Condition Weight (30%)
-        - Score >= 8: Favors Reuse/Resell
-        - Score 5-7: Favors Repair/Refurbish
-        - Score <= 4: Favors Recycle/Recover"]
+        Engine --> Weight1["Condition Weight (30%)<br/>• Score >= 8: Favors Reuse/Resell<br/>• Score 5-7: Favors Repair/Refurbish<br/>• Score <= 4: Favors Recycle/Recover"]
         
-        Engine --> Weight2["Material Weight (25%)
-        - Material Recyclability (1-10)
-        - Material Repairability (1-10)"]
+        Engine --> Weight2["Material Weight (25%)<br/>• Material Recyclability (1-10)<br/>• Material Repairability (1-10)"]
         
-        Engine --> Weight3["Age vs Lifespan (20%)
-        - (Product Age / Category Lifespan) Ratio"]
+        Engine --> Weight3["Age vs Lifespan (20%)<br/>• Product Age / Lifespan Ratio"]
         
-        Engine --> Weight4["Impact Factor (25%)
-        - Material Carbon & Toxicity Factor"]
+        Engine --> Weight4["Impact Factor (25%)<br/>• Material Carbon & Toxicity Factor"]
     end
 
     ScoringMatrix --> Aggregation["Compute Final Score (0–100) for all 7 Pathways"]
-    Aggregation --> ImpactCalc["Calculate Real-World Benefits:
-    - CO2 Saved = Weight_kg * Carbon_Factor * Action_Efficiency
-    - Landfill Diverted = Product_Mass * Diversion_Rate"]
+    Aggregation --> ImpactCalc["Calculate Real-World Benefits<br/>• CO2 Saved = Weight_kg * Carbon_Factor * Efficiency<br/>• Landfill Diverted = Product_Mass * Diversion_Rate"]
     
-    ImpactCalc --> Output([Top Recommendation & Impact Summary])
+    ImpactCalc --> Output(["Top Recommendation & Impact Summary"])
 ```
 
 ---
@@ -170,15 +151,19 @@ circular-economy/
 │   │   ├── config.py                # Centralized settings & environment loader
 │   │   ├── database.py              # SQLAlchemy engine, session & Base model setup
 │   │   ├── main.py                  # FastAPI app entrypoint, static uploads & routers
-│   │   ├── models.py                # Database models (User, Product, Category, Material, etc.)
+│   │   ├── models.py                # Database models (User, Product, Category, Material, ActionLog, etc.)
 │   │   ├── schemas.py               # Pydantic validation schemas
 │   │   ├── routers/
 │   │   │   ├── __init__.py
-│   │   │   ├── admin.py             # Admin management endpoints
-│   │   │   ├── auth.py              # Registration, login & current user endpoints
+│   │   │   ├── action_logs.py       # Action completion logging & history endpoints
+│   │   │   ├── admin.py             # Admin governance & user role endpoints
+│   │   │   ├── alternatives.py      # Sustainable circular alternatives matching
+│   │   │   ├── auth.py              # Auth, registration, login & password reset
 │   │   │   ├── catalog.py           # Category & material listings
+│   │   │   ├── notifications.py     # Circular alerts & notification management
 │   │   │   ├── products.py          # Product CRUD, image analysis endpoint
-│   │   │   └── recommendations.py   # Circular recommendation endpoints
+│   │   │   ├── recommendations.py   # Circular recommendation endpoints
+│   │   │   └── reports.py           # Sustainability analytics & CSV report export
 │   │   └── services/
 │   │       ├── __init__.py
 │   │       ├── image_analysis.py    # OpenCV blur, brightness, contrast & edge wear analyzer
@@ -186,19 +171,21 @@ circular-economy/
 │   │       └── recommendation_engine.py # Multi-criteria circular scoring algorithm
 │   ├── uploads/products/            # Storage directory for uploaded product photos
 │   ├── init_db.py                   # Database initializer & initial seed data script
+│   ├── test_api.py                  # End-to-end automated system & security test suite
 │   └── requirements.txt             # Python dependency manifest
 ├── frontend/
 │   ├── public/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── auth/                # LoginForm, RegisterForm
-│   │   │   ├── common/              # Navbar, LoadingSpinner, ProtectedRoute
-│   │   │   ├── dashboard/           # SummaryCards, ImpactChart
-│   │   │   ├── products/            # ProductList, ProductCard, ProductForm, ImageUpload
+│   │   │   ├── alternatives/        # SustainableAlternativesSection
+│   │   │   ├── auth/                # LoginForm, RegisterForm, ForgotPasswordModal
+│   │   │   ├── common/              # Navbar, NotificationBell, LoadingSpinner, ProtectedRoute
+│   │   │   ├── dashboard/           # SummaryCards, ImpactChart, ActionHistory
+│   │   │   ├── products/            # ProductList, ProductCard, ProductForm, ImageUpload, EditProductModal
 │   │   │   └── recommendations/     # RecommendationList, RecommendationCard
 │   │   ├── context/                 # AuthContext state management
-│   │   ├── pages/                   # Dashboard, Products, ProductDetail, Login, Register
-│   │   ├── services/                # Axios API client & service wrappers
+│   │   ├── pages/                   # Dashboard, Products, ProductDetail, Alternatives, Reports, Admin, Login, Register
+│   │   ├── services/                # Axios API clients & service wrappers
 │   │   ├── App.jsx                  # Root router & layout configuration
 │   │   ├── index.css                # Tailwind styles & theme variables
 │   │   └── main.jsx                 # React application entrypoint
@@ -219,7 +206,9 @@ circular-economy/
 erDiagram
     users ||--o{ products : owns
     users ||--o{ action_logs : logs
+    users ||--o{ notifications : receives
     categories ||--o{ products : classifies
+    categories ||--o{ sustainable_alternatives : references
     materials ||--o{ products : composes
     products ||--o{ circular_actions : generates
     products ||--o{ action_logs : logs
@@ -229,7 +218,7 @@ erDiagram
         string username
         string email
         string password_hash
-        string role "user | admin"
+        string role "user/admin"
         datetime created_at
         datetime last_login
     }
@@ -244,9 +233,9 @@ erDiagram
     materials {
         int id PK
         string name
-        int recyclability_score "1-10"
-        int repairability_score "1-10"
-        float environmental_impact_factor "0-1"
+        int recyclability_score
+        int repairability_score
+        float environmental_impact_factor
     }
 
     products {
@@ -256,7 +245,7 @@ erDiagram
         int category_id FK
         int material_id FK
         int age_years
-        int condition_score "1-10"
+        int condition_score
         string condition_description
         string image_path
         datetime created_at
@@ -265,10 +254,10 @@ erDiagram
     circular_actions {
         int id PK
         int product_id FK
-        string action_type "reuse|repair|refurbish|resell|recycle|recover|dispose"
+        string action_type
         float recommendation_score
         boolean is_recommended
-        string environmental_impact "JSON string"
+        string environmental_impact
         datetime created_at
     }
 
@@ -279,6 +268,27 @@ erDiagram
         string action_type
         datetime completed_at
         string notes
+    }
+
+    sustainable_alternatives {
+        int id PK
+        int category_id FK
+        string name
+        string brand
+        string circular_feature
+        int co2_reduction_pct
+        float lifespan_multiplier
+        string price_tier
+    }
+
+    notifications {
+        int id PK
+        int user_id FK
+        string title
+        string message
+        string notification_type
+        boolean is_read
+        datetime created_at
     }
 ```
 
@@ -332,6 +342,12 @@ erDiagram
    ```
    * Interactive API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
    * Alternative ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+7. **Run the Automated Test Suite (Optional)**:
+   ```bash
+   python test_api.py
+   ```
+   *Runs end-to-end security, role-based authorization, recommendation scoring, and report verification.*
 
 ---
 

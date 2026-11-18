@@ -13,6 +13,9 @@ from app.routers import admin as admin_router
 from app.routers import products as products_router
 from app.routers import recommendations as recommendations_router
 from app.routers import action_logs as action_logs_router
+from app.routers import alternatives as alternatives_router
+from app.routers import notifications as notifications_router
+from app.routers import reports as reports_router
 
 # Creates tables if they don't exist yet. For Phase 1 this is enough;
 # init_db.py (below) is used separately to also load seed data.
@@ -53,6 +56,9 @@ app.include_router(admin_router.router)
 app.include_router(products_router.router)
 app.include_router(recommendations_router.router)
 app.include_router(action_logs_router.router)
+app.include_router(alternatives_router.router)
+app.include_router(notifications_router.router)
+app.include_router(reports_router.router)
 
 @app.get("/")
 def root():

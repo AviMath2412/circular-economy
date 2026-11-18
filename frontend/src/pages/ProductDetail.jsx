@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import * as productService from '../services/productService'
 import RecommendationList from '../components/recommendations/RecommendationList'
 import EditProductModal from '../components/products/EditProductModal'
+import SustainableAlternativesSection from '../components/alternatives/SustainableAlternativesSection'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 
 export default function ProductDetail() {
@@ -114,6 +115,12 @@ export default function ProductDetail() {
 
       {/* Recommendations */}
       <RecommendationList productId={product.id} />
+
+      {/* Sustainable Alternatives */}
+      <SustainableAlternativesSection
+        productId={product.id}
+        categoryName={product.category_name}
+      />
 
       {/* Edit modal */}
       {editOpen && (
