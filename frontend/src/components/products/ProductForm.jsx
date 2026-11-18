@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as productService from '../../services/productService'
+import { getErrorMessage } from '../../services/api'
 import ImageUpload from './ImageUpload'
 
 const emptyAssessment = {
@@ -89,7 +90,7 @@ export default function ProductForm({ onSuccess }) {
         navigate(`/products/${res.product_id}`)
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Could not save product')
+      setError(getErrorMessage(err, 'Could not save product'))
     } finally {
       setSubmitting(false)
     }

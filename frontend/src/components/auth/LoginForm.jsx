@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getErrorMessage } from '../../services/api'
 
 export default function LoginForm() {
   const [username, setUsername] = useState('')
@@ -15,10 +16,10 @@ export default function LoginForm() {
     setError('')
     setLoading(true)
     try {
-      await login(username, password)
+      await login(username.trim(), password)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid username or password')
+      setError(getErrorMessage(err, 'Invalid username or password'))
     } finally {
       setLoading(false)
     }

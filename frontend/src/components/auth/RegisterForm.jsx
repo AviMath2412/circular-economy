@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getErrorMessage } from '../../services/api'
 
 export default function RegisterForm() {
   const [form, setForm] = useState({ username: '', email: '', password: '' })
@@ -17,11 +18,11 @@ export default function RegisterForm() {
     setError('')
     setLoading(true)
     try {
-      await register(form.username, form.email, form.password)
+      await register(form.username.trim(), form.email.trim(), form.password)
       setSuccess(true)
-      setTimeout(() => navigate('/login'), 1200)
+      setTimeout(() => navigate('/dashboard'), 800)
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed')
+      setError(getErrorMessage(err, 'Registration failed'))
     } finally {
       setLoading(false)
     }
@@ -29,8 +30,8 @@ export default function RegisterForm() {
 
   if (success) {
     return (
-      <div className="p-4 bg-forest/10 border border-forest/20 text-forest text-sm rounded-lg text-center font-medium">
-        ✓ Account created! Redirecting to login…
+      <div className="p-4 bg-forest/10 border border-forest/20 text-forest text-sm rounded-lg text-center font-medium animate-fadeIn">
+        ✓ Account created! Redirecting to dashboard…
       </div>
     )
   }

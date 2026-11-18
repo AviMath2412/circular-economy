@@ -16,16 +16,19 @@ from app.auth import hash_password, verify_password, create_access_token, get_cu
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def register(payload: UserRegister, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.username == payload.username).first():
+    clean_username = payload.username.strip()
+    clean_email = payload.email.strip().lower()
+
+    if db.query(User).filter(User.username == clean_username).first():
         raise HTTPException(status_code=400, detail="Username already taken")
-    if db.query(User).filter(User.email == payload.email).first():
+    if db.query(User).filter(User.email == clean_email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
     user = User(
-        username=payload.username,
-        email=payload.email,
+        username=clean_username,
+        email=clean_email,
         password_hash=hash_password(payload.password),
         role="user",
     )
@@ -33,12 +36,19 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    return {"success": True, "message": "User registered successfully", "user_id": user.id}
+    token = create_access_token(user_id=user.id, role=user.role)
+    return TokenResponse(token=token, user=UserOut.model_validate(user))
 
 
 @router.post("/login", response_model=TokenResponse)
 def login(payload: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == payload.username).first()
+    login_id = payload.username.strip()
+    # Support signing in with either username or email
+    user = (
+        db.query(User)
+        .filter((User.username == login_id) | (User.email == login_id.lower()))
+        .first()
+    )
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 

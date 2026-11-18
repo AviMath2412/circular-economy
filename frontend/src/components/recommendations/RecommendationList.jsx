@@ -78,7 +78,7 @@ export default function RecommendationList({ productId }) {
 
       <div className="space-y-3">
         {data.actions.map((a) => (
-          <RecommendationCard key={a.id} action={a} />
+          <RecommendationCard key={a.id} action={a} onCompleted={load} />
         ))}
       </div>
     </div>

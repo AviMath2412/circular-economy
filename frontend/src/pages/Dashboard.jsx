@@ -4,6 +4,7 @@ import * as productService from '../services/productService'
 import * as recommendationService from '../services/recommendationService'
 import SummaryCards from '../components/dashboard/SummaryCards'
 import ImpactChart from '../components/dashboard/ImpactChart'
+import ActionHistory from '../components/dashboard/ActionHistory'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 
 export default function Dashboard() {
@@ -76,6 +77,9 @@ export default function Dashboard() {
 
       {/* Chart */}
       <ImpactChart data={chartData} />
+
+      {/* Completed Actions History */}
+      <ActionHistory />
     </div>
   )
 }

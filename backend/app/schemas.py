@@ -145,6 +145,27 @@ class ConditionAssessmentOutput(BaseModel):
     breakdown: dict
     summary: str
 # ---------------------------------------------------------------------------
+# Action Logs (completion tracking)
+# ---------------------------------------------------------------------------
+
+class ActionLogCreate(BaseModel):
+    notes: str | None = None
+
+
+class ActionLogOut(BaseModel):
+    id: int
+    user_id: int
+    product_id: int
+    product_name: str
+    action_type: str
+    completed_at: datetime
+    notes: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+# ---------------------------------------------------------------------------
 # Recommendations
 # ---------------------------------------------------------------------------
 

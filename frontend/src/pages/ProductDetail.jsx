@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import * as productService from '../services/productService'
 import RecommendationList from '../components/recommendations/RecommendationList'
+import EditProductModal from '../components/products/EditProductModal'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 
 export default function ProductDetail() {
@@ -9,15 +10,18 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
+  const loadProduct = () => {
     productService
       .getProduct(id)
       .then(setProduct)
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [id])
+  }
+
+  useEffect(() => { loadProduct() }, [id])
 
   const handleDelete = async () => {
     if (!window.confirm(`Are you sure you want to remove "${product?.name}"?`)) return
@@ -90,18 +94,39 @@ export default function ProductDetail() {
               )}
             </div>
           </div>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50 cursor-pointer shrink-0"
-          >
-            {deleting ? 'Deleting…' : 'Delete Product'}
-          </button>
+          <div className="flex flex-col gap-2 shrink-0">
+            <button
+              onClick={() => setEditOpen(true)}
+              className="text-xs font-medium text-forest hover:text-forest-dark bg-forest/5 hover:bg-forest/10 border border-forest/20 px-3 py-1.5 rounded-lg transition cursor-pointer"
+            >
+              ✏️ Edit Product
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-xs font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50 cursor-pointer"
+            >
+              {deleting ? 'Deleting…' : 'Delete Product'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Recommendations */}
       <RecommendationList productId={product.id} />
+
+      {/* Edit modal */}
+      {editOpen && (
+        <EditProductModal
+          product={product}
+          onClose={() => setEditOpen(false)}
+          onSaved={() => {
+            setEditOpen(false)
+            setLoading(true)
+            loadProduct()
+          }}
+        />
+      )}
     </div>
   )
 }
